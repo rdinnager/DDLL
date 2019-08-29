@@ -10,11 +10,13 @@
 #' @param build_model Should the built custom model be returned? Or a function that can be used to build
 #' the model? Default FALSE.
 #'
+#' @return Either a layer or a function to build the layer. 
+#'
 #' @export
 keras_layer_to_model <- function(layer, build_model = FALSE) {
   
   layer_maker <- function(name = NULL) {
-    keras_model_custom(name = name, function(self) {
+    keras::keras_model_custom(name = name, function(self) {
     
     # define any number of layers here
     self$layer <- layer

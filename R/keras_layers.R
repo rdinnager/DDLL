@@ -94,12 +94,12 @@ SubPixelCov2d <- R6::R6Class("SubPixelCon2d",
                                        input_shape[2] * self$scale,
                                        input_shape[3] * self$scale,
                                        as.integer(input_shape[4] / (self$scale ^ 2)))
-                               self$output_dim <- tuple(dims)
+                               self$output_dim <- reticulate::tuple(dims)
                                
                              },
                              
                              call = function(x, mask = NULL) {
-                               tf$depth_to_space(x, self$scale)
+                               tensorflow::tf$depth_to_space(x, self$scale)
                                
                              },
                              
@@ -109,8 +109,22 @@ SubPixelCov2d <- R6::R6Class("SubPixelCon2d",
                            )
 )
 
+
+#' Keras layer to do a subpixel CNN, upsampling layer
+#'
+#' This layer does upsampling using a subpixel CNN, sometimes called a pixel shuffle. Essentially it shuffles
+#' together channels such that each new pixel created uses one of the channels in for that pixel in the previous
+#' layer.
+#'
+#' @param object A tensor input to the layer
+#' @param scale Upsample by this much (2 = 2x)
+#' @param name Optional name for the layer 
+#' @param trainable Is the layer trainable?
+#'
+#' @return A tensor output
+#' @export
 layer_subpixel_conv2d <- function(object, scale = 2, name = NULL, trainable = TRUE) {
-  create_layer(SubPixelCov2d, object, list(
+  keras::create_layer(SubPixelCov2d, object, list(
     scale = as.integer(scale),
     name = name,
     trainable = trainable

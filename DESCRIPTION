@@ -13,3 +13,9 @@ Encoding: UTF-8
 LazyData: true
 Suggests: 
     testthat (>= 2.1.0)
+Imports: 
+    tensorflow,
+    keras,
+    R6,
+    reticulate
+RoxygenNote: 6.1.1
