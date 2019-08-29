@@ -1,3 +1,9 @@
+#' Generate Keras Custo Model Template
+#'
+#' @return
+#' @export
+#'
+#' @examples
 keras_custom_model_template <- function() {
   cat('iris_regression_model <- function(name = NULL) {
     
@@ -22,6 +28,12 @@ model <- iris_regression_model()')
   
 }
 
+#' Generate Keras Custom Layer Template
+#'
+#' @return
+#' @export
+#'
+#' @examples
 keras_custom_layer_template <- function() {
   
   cat('CustomLayer <- R6::R6Class("CustomLayer",
@@ -131,3 +143,76 @@ layer_subpixel_conv2d <- function(object, scale = 2, name = NULL, trainable = TR
   ))
 }
 
+
+InstanceNormalizationParamsAsInput <- R6::R6Class("InstanceNormalizationParamsAsInput",
+                           
+                           inherit = KerasLayer,
+                           
+                           public = list(
+                             
+                             ## add slots for any variables used inside model, e.g. self$x 
+                             output_params = NULL,
+                             
+                             epsilon = NULL,
+                             
+                             ## initialize any input independent variables within layer
+                             initialize = function(output_params, epsilon) {
+                               self$output_params <- output_params
+                               self$epsilon <- epsilon
+                             },
+                             
+                             ## initialize any input dependent variables within layer
+                             # build = function(input_shape) {
+                             #   
+                             # },
+                             
+                             ## write the logic of the layer here (e.g. the "forward pass")
+                             call = function(x, mask = NULL) {
+                               
+                               #c(images, beta, gamma) %<-% x
+                               m <- k_mean(x$images, c(2, 3), keepdims = TRUE)
+                               s <- k_std(x$images, c(2, 3), keepdims = TRUE) + self$epsilon
+                               
+                               normed <- (x$images - m) / s  
+                               normed <- (x$gamma * normed) + x$beta
+                               
+                               if(self$output_params) {
+                                 return(list(images = normed, beta = beta, gamma = gamma))
+                               } else {
+                                 return(normed)
+                               }
+                             }#,
+                             
+                             # ## if output shape is different from input, output it here
+                             # compute_output_shape = function(input_shape) {
+                             #   list(input_shape[[1]], self$output_dim)
+                             # }
+                           )
+)
+
+
+#' Instance Normalization Layer where the Parameters are passed in as inputs
+#' 
+#' This layer performs an instance normalization using parameters passed in the inputs. This is
+#' useful if you want to calculate the affine transformation parameters somewhere else in the network,
+#' so this should keep the backpropagation working fin.
+#'
+#' @param object Named list of input tensors. Should be named "images", "beta", and "gamma", for the image
+#' tensor, and the beta and gamma affine parameters respectively.
+#' @param output_params Should the affine parameters be outputted as well? Or just the normalized image? Default: TRUE.
+#' @param epsilon epsilon value. Small value to add for numerical stability.
+#' @param name Optional layer name
+#' @param trainable Is the layer trainable?
+#'
+#' @return A list of output tensors, or a single tensor.
+#' @export
+#'
+#' @examples
+layer_instance_norm_params_as_input <- function(object, output_params = TRUE, epsilon = 1e-3, name = NULL, trainable = TRUE) {
+  create_layer(InstanceNormalizationParamsAsInput, object, list(
+    output_params = output_params,
+    epsilon = epsilon,
+    name = name,
+    trainable = trainable
+  ))
+}

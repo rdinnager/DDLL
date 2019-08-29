@@ -1,4 +1,5 @@
 library(tensorflow)
+library(DDLL)
 
 tfe_enable_eager_execution(device_policy = "silent")
 tfe <- tf$contrib$eager
@@ -52,6 +53,12 @@ sub_conv_2d <- keras_layer_to_model(
 model_conv2d <- conv_2d()
 
 model_subconv2d <- sub_conv_2d()
+
+
+cond_instance_norm <- keras_layer_to_model(layer_cond_instance_norm_params_as_input(), build_model = TRUE)
+
+list(images = image_tens, beta = 2, gamma = 1) %>%
+  cond_instance_norm()
 
 image_tens %>%
   model_conv2d() %>%
