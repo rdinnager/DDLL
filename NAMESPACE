@@ -3,5 +3,5 @@
 export(keras_custom_layer_template)
 export(keras_custom_model_template)
 export(keras_layer_to_model)
-export(layer_instance_norm_params_as_input)
+export(layer_instance_norm_plus_params_as_input)
 export(layer_subpixel_conv2d)

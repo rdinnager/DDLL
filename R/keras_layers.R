@@ -144,7 +144,7 @@ layer_subpixel_conv2d <- function(object, scale = 2, name = NULL, trainable = TR
 }
 
 
-InstanceNormalizationParamsAsInput <- R6::R6Class("InstanceNormalizationParamsAsInput",
+InstanceNormalizationPlusParamsAsInput <- R6::R6Class("InstanceNormalizationPlusParamsAsInput",
                            
                            inherit = KerasLayer,
                            
@@ -170,14 +170,18 @@ InstanceNormalizationParamsAsInput <- R6::R6Class("InstanceNormalizationParamsAs
                              call = function(x, mask = NULL) {
                                
                                #c(images, beta, gamma) %<-% x
-                               m <- k_mean(x$images, c(2, 3), keepdims = TRUE)
+                               mu <- k_mean(x$images, c(2, 3), keepdims = TRUE)
                                s <- k_std(x$images, c(2, 3), keepdims = TRUE) + self$epsilon
+                               
+                               m <- k_mean(mu)
+                               v <- k_std(mu)
                                
                                normed <- (x$images - m) / s  
                                normed <- (x$gamma * normed) + x$beta
+                               normed <- normed + x$alpha * ((mu - m) / v)
                                
                                if(self$output_params) {
-                                 return(list(images = normed, beta = beta, gamma = gamma))
+                                 return(list(images = normed, beta = x$beta, gamma = x$gamma, alpha = x$alpha))
                                } else {
                                  return(normed)
                                }
@@ -208,8 +212,8 @@ InstanceNormalizationParamsAsInput <- R6::R6Class("InstanceNormalizationParamsAs
 #' @export
 #'
 #' @examples
-layer_instance_norm_params_as_input <- function(object, output_params = TRUE, epsilon = 1e-3, name = NULL, trainable = TRUE) {
-  create_layer(InstanceNormalizationParamsAsInput, object, list(
+layer_instance_norm_plus_params_as_input <- function(object, output_params = TRUE, epsilon = 1e-3, name = NULL, trainable = TRUE) {
+  create_layer(InstanceNormalizationPlusParamsAsInput, object, list(
     output_params = output_params,
     epsilon = epsilon,
     name = name,
